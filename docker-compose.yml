@@ -1,0 +1,36 @@
+﻿version: '3.8'
+
+services:
+
+  mysql_hostsyncapp:
+    image: mysql:8.0
+    container_name: mysql_HostSyncAppdb
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: HostSyncAppdb
+    ports:
+      - "3310:3306" 
+    volumes:
+      - mysql_data_new:/var/lib/mysql
+    networks:
+      - my_network
+
+  phpmyadmin_hostsyncapp:
+    image: phpmyadmin/phpmyadmin
+    container_name: phpmyadmin_HostSyncAppdb
+    environment:
+      PMA_HOST: mysql_hostsyncapp
+      PMA_USER: root
+      PMA_PASSWORD: root
+    ports:
+      - "8084:80"
+    depends_on:
+      - mysql_hostsyncapp
+    networks:
+      - my_network
+
+volumes:
+  mysql_data_new:
+
+networks:
+  my_network:  
