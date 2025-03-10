@@ -37,26 +37,26 @@ jobs:
         echo "Listing .ssh directory"
         ls -la $HOME/.ssh
 
+    - name: 💂🏻 Mevcut Konteyneri Sil
+      run: |
+        ssh -i $HOME/.ssh/id_ed25519 -oKexAlgorithms=+diffie-hellman-group14-sha1 -oCiphers=aes128-ctr -o StrictHostKeyChecking=no -p ${{ secrets.SSH_PORT }} ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} << 'EOF'
+          docker stop hostsyncapp || true
+          docker rm hostsyncapp || true
+        EOF
+
     - name: 📂 Sunucuya Reponun İçeriğini Kopyala
       run: |
-        scp -i $HOME/.ssh/id_ed25519 -oKexAlgorithms=+diffie-hellman-group14-sha1 -oCiphers=aes128-ctr -o StrictHostKeyChecking=no -P ${{ secrets.SSH_PORT }} -r ./ ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:/home/${{ secrets.SSH_USER }}/serverapp
+        scp -i $HOME/.ssh/id_ed25519 -oKexAlgorithms=+diffie-hellman-group14-sha1 -oCiphers=aes128-ctr -o StrictHostKeyChecking=no -P ${{ secrets.SSH_PORT }} -r ./ ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:/home/${{ secrets.SSH_USER }}/hostsyncapp
 
-    - name: Mevcut Konteyneri Sil
+    - name: 🔄 Build Docker Image
       run: |
         ssh -i $HOME/.ssh/id_ed25519 -oKexAlgorithms=+diffie-hellman-group14-sha1 -oCiphers=aes128-ctr -o StrictHostKeyChecking=no -p ${{ secrets.SSH_PORT }} ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} << 'EOF'
-          docker stop myapp || true
-          docker rm myapp || true
+          cd /home/${{ secrets.SSH_USER }}/hostsyncapp
+          docker build -t hostsyncapp:latest .
         EOF
 
-    - name: Build Docker Image
+    - name: 🚀 Run Docker Container
       run: |
         ssh -i $HOME/.ssh/id_ed25519 -oKexAlgorithms=+diffie-hellman-group14-sha1 -oCiphers=aes128-ctr -o StrictHostKeyChecking=no -p ${{ secrets.SSH_PORT }} ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} << 'EOF'
-          cd /home/${{ secrets.SSH_USER }}/serverapp
-          docker build -t myapp:latest .
-        EOF
-
-    - name: Run Docker Container
-      run: |
-        ssh -i $HOME/.ssh/id_ed25519 -oKexAlgorithms=+diffie-hellman-group14-sha1 -oCiphers=aes128-ctr -o StrictHostKeyChecking=no -p ${{ secrets.SSH_PORT }} ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} << 'EOF'
-          docker run -d -p 8080:8080 --name myapp myapp:latest
+          docker run -d -p 9090:8080 --name hostsyncapp hostsyncapp:latest
         EOF
